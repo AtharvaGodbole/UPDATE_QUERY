@@ -5,7 +5,7 @@ from datetime import datetime
 import io
 
 
-# --- Helper Functions from Your Original Script (Adjusted for Input Handling) ---
+# --- Helper Functions from Your Original Script (Updated for Excel) ---
 
 def generate_random_value():
     return random.randint(10000, 20000)
@@ -16,12 +16,11 @@ def generate_random_rate():
 
 
 def read_columns_from_input(file_stream):
-    """Reads columns from the uploaded CSV file stream."""
+    """Reads columns from the uploaded Excel file stream."""
 
-    # Read the CSV file stream provided by Streamlit's uploader
-    # Assuming the first row contains column names
-    # The uploaded file was a CSV, so we use read_csv
-    df = pd.read_csv(file_stream, header=0)
+    # MODIFICATION 1: Changed pd.read_csv to pd.read_excel
+    # Assumes the column names are in the first row (header=0) and the data is in the first sheet.
+    df = pd.read_excel(file_stream, header=0)
 
     # Extract columns for each category based on index, as in the original script
     # The columns are: General, Rate, Transaction, Acquisition, and Input (OBA)
@@ -62,10 +61,8 @@ def build_update_query_for_acq(columns, fic_mis_date, v_ri_group_code, table_nam
     return f"UPDATE {table_name} SET {set_clause_str} WHERE {where_clause};"
 
 
-# NOTE: The last column in your script was 'oba_columns', and in the CSV it was 'OBA Columns'.
-# The function for it is being renamed for clarity.
 def build_update_query_for_input_columns(columns, fic_mis_date, v_ri_group_code,
-                                         table_name='fsi_ri_group_input_detail'):
+                                        table_name='fsi_ri_group_input_detail'):
     set_clause = [f"{column} = 0" for column in columns]
     set_clause_str = ", ".join(set_clause)
     where_clause = f"fic_mis_date = TO_DATE('{fic_mis_date}', 'DD-MON-YYYY') AND v_ri_group_code = '{v_ri_group_code}'"
@@ -76,12 +73,13 @@ def build_update_query_for_input_columns(columns, fic_mis_date, v_ri_group_code,
 
 st.title("Reinsurance SQL UPDATE Query Generator (RI) ⚙️")
 st.markdown(
-    "Upload the column definition file and enter the required parameters for the `fsi_ri_group_input_detail` table.")
+    "Upload the column definition **Excel** file and enter the required parameters for the `fsi_ri_group_input_detail` table.")
 
 # 1. File Uploader
+# MODIFICATION 2: Changed file name prompt and allowed type to 'xlsx'
 uploaded_file = st.file_uploader(
-    "Upload the 'ri_columns.xlsx - Sheet1.csv' file:",
-    type=['csv']
+    "Upload the 'ri_columns.xlsx' file:",
+    type=['xlsx']
 )
 
 # 2. Date Input
@@ -109,7 +107,7 @@ if st.button("Generate RI Queries"):
 
     # Validation checks
     if not uploaded_file:
-        st.error("Please upload the CSV column definition file.")
+        st.error("Please upload the Excel column definition file.")
         st.stop()
 
     if not fic_mis_date_str:
@@ -166,4 +164,4 @@ if st.button("Generate RI Queries"):
 
     except Exception as e:
         st.error(f"An error occurred: {e}")
-        st.info("Please ensure your file is a valid CSV with at least 5 columns of data.")
+        st.info("Please ensure your file is a valid Excel file with at least 5 columns of data in the first sheet.")
